@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Instant Delivery Location Share</title>
+  <style>
+    body { 
+      font-family: Arial, sans-serif; 
+      padding: 20px; 
+      text-align: center;
+      background-color: #f4f7f6;
+    }
+    .card {
+      background: #ffffff;
+      padding: 30px 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      max-width: 400px;
+      margin: 20px auto;
+    }
+    .share-btn { 
+      background-color: #0084FF; 
+      color: white; 
+      padding: 16px 24px; 
+      border: none; 
+      border-radius: 8px; 
+      font-weight: bold; 
+      font-size: 18px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 15px;
+    }
+    .share-btn:active {
+      background-color: #006bce;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h3>📍 Delivery Location Share</h3>
+    <p>Pindutin ang button sa ibaba para ma-share agad ang inyong eksaktong lokasyon sa aming Messenger.</p>
+
+    <button class="share-btn" onclick="shareLocation()">
+      📤 Pindutin para I-share sa Messenger
+    </button>
+  </div>
+
+  <script>
+    function shareLocation() {
+      const myLocationUrl = "https://www.google.com/maps/search/?api=1&query=My+Location";
+
+      if (navigator.share) {
+        navigator.share({
+          title: 'Aking Lokasyon',
+          text: 'Ito po ang aking eksaktong lokasyon para sa delivery:',
+          url: myLocationUrl
+        })
+        .then(() => console.log('Na-share na!'))
+        .catch((err) => console.log('Canceled:', err));
+      } else {
+        navigator.clipboard.writeText(myLocationUrl);
+        alert("Na-copy na ang link! Pwede mo na itong i-paste sa Messenger.");
+      }
+    }
+  </script>
+
+</body>
+</html>
