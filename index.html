@@ -38,8 +38,22 @@
     .status-msg {
       font-size: 13px;
       color: #0084FF;
-      margin-top: 10px;
+      margin-top: 12px;
       font-weight: bold;
+      line-height: 1.4;
+    }
+    .status-msg.error {
+      color: #d93025;
+    }
+    .instruction-box {
+      background-color: #eef6ff;
+      border-left: 4px solid #0084FF;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: #333;
+      text-align: left;
+      border-radius: 4px;
+      margin-top: 15px;
     }
     .copyright-footer {
       margin-top: 30px;
@@ -52,18 +66,24 @@
 
   <div class="card">
     <h3>📍 Delivery Location Share</h3>
-    <p>Pindutin ang button sa ibaba para ma-share agad ang inyong eksaktong Plus Code sa aming Messenger.</p>
+    <p>Pindutin ang button sa ibaba para ma-share agad ang inyong Digital Address (Plus Code) sa aming Messenger.</p>
 
     <button class="share-btn" onclick="shareLocation()">
       📤 Pindutin para I-share sa Messenger
     </button>
+    
     <p id="status" class="status-msg"></p>
+
+    <!-- Paalala sa user para maiwasan ang error -->
+    <div class="instruction-box">
+      <strong>💡 Paalala:</strong> Siguraduhing <b>naka-ON ang GPS/Location</b> ng iyong phone at i-tap ang <b>"Allow"</b> kapag nag-prompt ang browser.
+    </div>
   </div>
 
   <script>
     const ALPHABET = "23456789CFGHJMPQRVWX";
 
-    // Fast Native Pure JS Plus Code Encoder (No External Library)
+    // Native Pure JS Plus Code Encoder
     function encodeStandardPlusCode(lat, lng) {
       lat = Math.min(Math.max(lat, -90), 90);
       lng = ((lng + 180) % 360 + 360) % 360 - 180;
@@ -98,19 +118,21 @@
 
     function shareLocation() {
       const statusEl = document.getElementById("status");
+      statusEl.classList.remove("error");
 
       if (!navigator.geolocation) {
-        alert("Hindi suportado ng browser mo ang Geolocation.");
+        statusEl.classList.add("error");
+        statusEl.innerText = "Hindi suportado ng browser mo ang Geolocation.";
         return;
       }
 
-      statusEl.innerText = "Kina-calculate ang Plus Code...";
+      statusEl.innerText = "Kinukuha ang lokasyon... Paki-allow ang location prompt kapag lumabas.";
 
-      // Optimized Geolocation Config para WALANG DELAY/LOADING
+      // Dinagdagan ng timeout sa 10 seconds para makahabol ang GPS chip
       const geoOptions = {
         enableHighAccuracy: true,
-        timeout: 5000,
-        maximumAge: 10000 // Tumatanggap ng fresh location within last 10s para instant
+        timeout: 10000, 
+        maximumAge: 0 
       };
 
       navigator.geolocation.getCurrentPosition(
@@ -118,29 +140,53 @@
           const lat = pos.coords.latitude;
           const lng = pos.coords.longitude;
 
-          // Instant Native Encoder Call
           const plusCode = encodeStandardPlusCode(lat, lng);
-          const plusCodeUrl = `https://plus.codes/${plusCode}`;
-          const shareText = `Plus Code: ${plusCode}\nIto po ang aking eksaktong lokasyon para sa delivery:`;
+          const googleMapsUrl = `https://maps.google.com/?q=${lat},${lng}`;
 
-          statusEl.innerText = "";
+          // Malinis at maayos na format para sa Messenger
+          const shareText = `📍 EKSAKTONG LOKASYON NG DELIVERY\n\n` +
+                            `• Digital Address (Plus Code):\n${plusCode}\n\n` +
+                            `• Direct Map Link:`;
+
+          statusEl.innerText = "Nakuha na ang lokasyon!";
 
           if (navigator.share) {
             navigator.share({
               title: 'Aking Lokasyon',
               text: shareText,
-              url: plusCodeUrl
+              url: googleMapsUrl
             })
-            .then(() => console.log('Na-share na!'))
-            .catch((err) => console.log('Canceled:', err));
+            .then(() => {
+              statusEl.innerText = "";
+            })
+            .catch((err) => {
+              console.log('Canceled:', err);
+              statusEl.innerText = "Kanselado ang pag-share.";
+            });
           } else {
-            navigator.clipboard.writeText(`${shareText}\n${plusCodeUrl}`);
-            alert(`Na-copy na ang Plus Code (${plusCode})! Pwede mo na itong i-paste sa Messenger.`);
+            const copyFull = `${shareText}\n${googleMapsUrl}`;
+            navigator.clipboard.writeText(copyFull);
+            alert(`Na-copy na ang Digital Address (${plusCode})! Pwede mo na itong i-paste sa Messenger.`);
+            statusEl.innerText = "";
           }
         },
         (err) => {
-          statusEl.innerText = "";
-          alert("Siguraduhing naka-ON ang GPS/Location sa iyong phone.");
+          statusEl.classList.add("error");
+          
+          // Detalyadong mga babala sa UI sa halip na simpleng popup alert agad
+          switch(err.code) {
+            case err.PERMISSION_DENIED:
+              statusEl.innerText = "⚠️ Na-block ang Location. Paki-ALLOW ang location permission sa browser settings.";
+              break;
+            case err.POSITION_UNAVAILABLE:
+              statusEl.innerText = "⚠️ Hindi makuha ang GPS signal. Siguraduhing NAKA-ON ang Location sa iyong phone.";
+              break;
+            case err.TIMEOUT:
+              statusEl.innerText = "⚠️ Na-timeout ang pagkuha ng lokasyon. Pakisubukang pindutin ulit ang button.";
+              break;
+            default:
+              statusEl.innerText = "⚠️ Siguraduhing naka-ON ang GPS/Location sa iyong phone at subukan ulit.";
+          }
         },
         geoOptions
       );
