@@ -87,7 +87,8 @@
         const countdownEl = document.getElementById('countdown');
         const btn = document.getElementById('proceedBtn');
 
-        const mainAppUrl = "https://maximizer-share-location.github.io/digital-address-byDevAdmin-JayromePevidal/app.html";
+        // FIXED: Pinalitan mula sa app.html papuntang ./index.html
+        const mainAppUrl = "./index.html";
 
         const timer = setInterval(() => {
             timeLeft--;
