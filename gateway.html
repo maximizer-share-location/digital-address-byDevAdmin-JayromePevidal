@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShareMap - Loading App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #0f172a;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .card {
+            background: #1e293b;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .timer {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #38bdf8;
+            margin: 15px 0;
+        }
+        .ad-container {
+            width: 100%;
+            min-height: 250px;
+            background-color: #334155;
+            border: 2px dashed #64748b;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        .btn {
+            background-color: #94a3b8;
+            color: #ffffff;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: not-allowed;
+            width: 100%;
+            transition: 0.3s;
+        }
+        .btn.active {
+            background-color: #0284c7;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>ShareMap Digital Address</h2>
+        <p>Inihahanda ang iyong app, pakihintay...</p>
+
+        <!-- DITO ILALAGAY ANG AD SCRIPT MULA SA AD NETWORK -->
+        <div class="ad-container" id="adBox">
+            <!-- Halimbawa: I-paste dito ang Monetag / AdSense Script Code -->
+            <p style="color: #cbd5e1; font-size: 0.85rem;">[ Sponsor Advertisement / Video Ad ]</p>
+        </div>
+
+        <div class="timer" id="countdown">5</div>
+
+        <button id="proceedBtn" class="btn" disabled>Loading...</button>
+    </div>
+
+    <script>
+        let timeLeft = 5;
+        const countdownEl = document.getElementById('countdown');
+        const btn = document.getElementById('proceedBtn');
+
+        // PALITAN ITO NG MATCHING MAIN APP URL MO SA GITHUB PAGES
+        const mainAppUrl = "https://maximizer-share-location.github.io/digital-address-byDevAdmin-JayromePevidal/app.html";
+
+        const timer = setInterval(() => {
+            timeLeft--;
+            countdownEl.textContent = timeLeft;
+
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                countdownEl.style.display = "none";
+                btn.classList.add("active");
+                btn.removeAttribute("disabled");
+                btn.textContent = "Open ShareMap App";
+
+                // Auto redirect pagkatapos ng timer
+                btn.onclick = () => {
+                    window.location.href = mainAppUrl;
+                };
+            }
+        }, 1000);
+    </script>
+
+</body>
+</html>
