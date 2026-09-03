@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Instant Delivery Location Share</title>
 
+  <!-- OPEN GRAPH META TAGS (Para sa Messenger Link Preview / Card Image) -->
+  <meta property="og:title" content="📍 Instant Delivery Location Share">
+  <meta property="og:description" content="Pindutin para ma-share agad ang inyong Digital Address (Plus Code) para sa delivery.">
+  <meta property="og:image" content="https://maximizer-share-location.github.io/digital-address-byDevAdmin-JayromePevidal/1788426150049_transfer_2026-09-03_195332.png">
+  <meta property="og:url" content="https://maximizer-share-location.github.io/digital-address-byDevAdmin-JayromePevidal/">
+  <meta property="og:type" content="website">
+
   <style>
     body { 
       font-family: Arial, sans-serif; 
@@ -118,14 +125,13 @@
       if (isMessengerBrowser()) {
         const noticeEl = document.getElementById("messengerNotice");
         if (noticeEl) {
-          noticeEl.style.display = "block"; // Ipakita ang warning box sa Messenger
+          noticeEl.style.display = "block";
         }
       }
     });
 
     // Main Button Click Controller
     function handleMainButtonClick() {
-      // KAPAG NASA MESSENGER: I-trigger ang Chrome Intent
       if (isMessengerBrowser()) {
         const currentUrl = window.location.href;
         const cleanUrl = currentUrl.replace(/^https?:\/\//, '');
@@ -135,12 +141,10 @@
         statusEl.classList.remove("error");
         statusEl.innerText = "Binubuksan sa Chrome Browser... Paki-tap ang 'CONTINUE' sa lumabas na prompt.";
 
-        // I-force open sa Chrome App
         window.location.href = chromeIntent;
         return;
       }
 
-      // KAPAG NASA CHROME / EXTERNAL BROWSER NA: Kumuha na ng GPS Location!
       executeLocationShare();
     }
 
@@ -198,7 +202,7 @@
           const plusCode = encodeStandardPlusCode(lat, lng);
           const googleMapsUrl = `https://maps.google.com/?q=${lat},${lng}`;
 
-          const shareText = `📍 PinLocation\n\n` +
+          const shareText = `📍 EKSAKTONG LOKASYON NG DELIVERY\n\n` +
                             `• Digital Address (Plus Code):\n${plusCode}\n\n` +
                             `• Direct Map Link:`;
 
