@@ -56,6 +56,21 @@
       margin-top: 15px;
       line-height: 1.4;
     }
+
+    /* Warning Box Style para sa Messenger Browser */
+    .messenger-alert {
+      display: none; /* Lalabas lang kapag nasa Messenger Browser */
+      background-color: #fff3cd;
+      border: 1px solid #ffeeba;
+      color: #856404;
+      padding: 12px 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      text-align: left;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
     .copyright-footer {
       margin-top: 30px;
       font-size: 12px;
@@ -66,10 +81,17 @@
 <body>
 
   <div class="card">
+
+    <!-- Warning box na nagpapaliwanag kung bakit magle-leave sa app -->
+    <div id="messengerNotice" class="messenger-alert">
+      ⚠️ <b>Gamit mo ang Messenger Browser:</b><br>
+      Para gumana nang tama ang GPS Location, pindutin ang button sa ibaba at i-tap ang <b>"CONTINUE"</b> para magbukas sa Chrome browser.
+    </div>
+
     <h3>📍 Delivery Location Share</h3>
     <p>Pindutin ang button sa ibaba para ma-share agad ang inyong Digital Address (Plus Code) sa aming Messenger.</p>
 
-    <!-- Isang Blue Button lang na smart! -->
+    <!-- Isang smart Blue Button -->
     <button id="mainShareBtn" class="share-btn" onclick="handleMainButtonClick()">
       📤 Pindutin para I-share sa Messenger
     </button>
@@ -91,9 +113,19 @@
       return (ua.indexOf("FBAN") > -1) || (ua.indexOf("FBAV") > -1) || (ua.indexOf("Messenger") > -1);
     }
 
+    // Auto-check pagkabukas ng pahina
+    window.addEventListener("DOMContentLoaded", () => {
+      if (isMessengerBrowser()) {
+        const noticeEl = document.getElementById("messengerNotice");
+        if (noticeEl) {
+          noticeEl.style.display = "block"; // Ipakita ang warning box sa Messenger
+        }
+      }
+    });
+
     // Main Button Click Controller
     function handleMainButtonClick() {
-      // KAPAG NASA MESSENGER: I-redirect patungong Chrome sa pamamagitan ng Intent
+      // KAPAG NASA MESSENGER: I-trigger ang Chrome Intent
       if (isMessengerBrowser()) {
         const currentUrl = window.location.href;
         const cleanUrl = currentUrl.replace(/^https?:\/\//, '');
