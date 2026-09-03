@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Instant Location Share</title>
+  <title>Instant Delivery Location Share</title>
+
   <style>
     body { 
       font-family: Arial, sans-serif; 
@@ -13,20 +14,20 @@
     }
     .card {
       background: #ffffff;
-      padding: 25px;
+      padding: 30px 20px;
       border-radius: 12px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
       max-width: 400px;
-      margin: 0 auto;
+      margin: 20px auto;
     }
     .share-btn { 
       background-color: #0084FF; 
       color: white; 
-      padding: 14px 24px; 
+      padding: 16px 24px; 
       border: none; 
       border-radius: 8px; 
       font-weight: bold; 
-      font-size: 16px;
+      font-size: 18px;
       cursor: pointer;
       width: 100%;
       margin-top: 15px;
@@ -34,40 +35,122 @@
     .share-btn:active {
       background-color: #006bce;
     }
+    .status-msg {
+      font-size: 13px;
+      color: #0084FF;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    .copyright-footer {
+      margin-top: 30px;
+      font-size: 12px;
+      color: #777777;
+    }
   </style>
 </head>
 <body>
 
   <div class="card">
     <h3>📍 Delivery Location Share</h3>
-    <p>Pindutin ang button sa ibaba para ma-share ang inyong eksaktong lokasyon via Messenger.</p>
+    <p>Pindutin ang button sa ibaba para ma-share agad ang inyong eksaktong Plus Code sa aming Messenger.</p>
 
     <button class="share-btn" onclick="shareLocation()">
       📤 Pindutin para I-share sa Messenger
     </button>
+    <p id="status" class="status-msg"></p>
   </div>
 
   <script>
-    function shareLocation() {
-      // Direct Search API link para sa kasalukuyang GPS location ng device
-      const myLocationUrl = "https://www.google.com/maps/search/?api=1&query=My+Location";
+    const ALPHABET = "23456789CFGHJMPQRVWX";
 
-      // Trigger sa Web Share API para sa Android Native Share Sheet
-      if (navigator.share) {
-        navigator.share({
-          title: 'Aking Lokasyon',
-          text: 'Ito po ang aking lokasyon para sa delivery calculation:',
-          url: myLocationUrl
-        })
-        .then(() => console.log('Matagumpay na na-share!'))
-        .catch((err) => console.log('Canceled / Error:', err));
-      } else {
-        // Fallback para sa mga browser na walang Web Share API
-        navigator.clipboard.writeText(myLocationUrl);
-        alert("Nai-copy na ang link! Pwede mo na itong i-paste sa Messenger chat.");
+    // Fast Native Pure JS Plus Code Encoder (No External Library)
+    function encodeStandardPlusCode(lat, lng) {
+      lat = Math.min(Math.max(lat, -90), 90);
+      lng = ((lng + 180) % 360 + 360) % 360 - 180;
+      if (lat === 90) lat = 89.999999;
+
+      let latVal = lat + 90;
+      let lngVal = lng + 180;
+      let code = "";
+
+      let latPlace = 20;
+      let lngPlace = 20;
+
+      for (let i = 0; i < 4; i++) {
+        let d1 = Math.floor(latVal / latPlace);
+        let d2 = Math.floor(lngVal / lngPlace);
+        latVal -= d1 * latPlace;
+        lngVal -= d2 * lngPlace;
+        code += ALPHABET.charAt(d1) + ALPHABET.charAt(d2);
+        
+        latPlace /= 20;
+        lngPlace /= 20;
       }
+
+      code += "+";
+
+      let d1 = Math.floor(latVal / latPlace);
+      let d2 = Math.floor(lngVal / lngPlace);
+      code += ALPHABET.charAt(d1) + ALPHABET.charAt(d2);
+
+      return code;
+    }
+
+    function shareLocation() {
+      const statusEl = document.getElementById("status");
+
+      if (!navigator.geolocation) {
+        alert("Hindi suportado ng browser mo ang Geolocation.");
+        return;
+      }
+
+      statusEl.innerText = "Kina-calculate ang Plus Code...";
+
+      // Optimized Geolocation Config para WALANG DELAY/LOADING
+      const geoOptions = {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 10000 // Tumatanggap ng fresh location within last 10s para instant
+      };
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+
+          // Instant Native Encoder Call
+          const plusCode = encodeStandardPlusCode(lat, lng);
+          const plusCodeUrl = `https://plus.codes/${plusCode}`;
+          const shareText = `Plus Code: ${plusCode}\nIto po ang aking eksaktong lokasyon para sa delivery:`;
+
+          statusEl.innerText = "";
+
+          if (navigator.share) {
+            navigator.share({
+              title: 'Aking Lokasyon',
+              text: shareText,
+              url: plusCodeUrl
+            })
+            .then(() => console.log('Na-share na!'))
+            .catch((err) => console.log('Canceled:', err));
+          } else {
+            navigator.clipboard.writeText(`${shareText}\n${plusCodeUrl}`);
+            alert(`Na-copy na ang Plus Code (${plusCode})! Pwede mo na itong i-paste sa Messenger.`);
+          }
+        },
+        (err) => {
+          statusEl.innerText = "";
+          alert("Siguraduhing naka-ON ang GPS/Location sa iyong phone.");
+        },
+        geoOptions
+      );
     }
   </script>
+
+  <!-- Copyright Section -->
+  <footer class="copyright-footer">
+    <p>© 2026 Maximizer Admin - Developed by Jayrome Pevidal. All rights reserved.</p>
+  </footer>
 
 </body>
 </html>
