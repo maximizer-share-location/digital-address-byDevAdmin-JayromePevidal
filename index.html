@@ -1,10 +1,13 @@
-
 <!DOCTYPE html>
 <html lang="tl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Instant Delivery Location Share</title>
+
+  <!-- Google Open Location Code (Plus Code) Library -->
+  <script src="https://cdn.jsdelivr.net/npm/open-location-code@1.0.3/openlocationcode.min.js"></script>
+
   <style>
     body { 
       font-family: Arial, sans-serif; 
@@ -35,6 +38,11 @@
     .share-btn:active {
       background-color: #006bce;
     }
+    .status-msg {
+      font-size: 13px;
+      color: #666;
+      margin-top: 10px;
+    }
     .copyright-footer {
       margin-top: 30px;
       font-size: 12px;
@@ -51,23 +59,52 @@
     <button class="share-btn" onclick="shareLocation()">
       📤 Pindutin para I-share sa Messenger
     </button>
+    <p id="status" class="status-msg"></p>
   </div>
 
   <script>
     function shareLocation() {
-      const myLocationUrl = "https://www.google.com/maps/search/?api=1&query=My+Location";
+      const statusEl = document.getElementById("status");
 
-      if (navigator.share) {
-        navigator.share({
-          title: 'Aking Lokasyon',
-          text: 'Ito po ang aking eksaktong lokasyon para sa delivery:',
-          url: myLocationUrl
-        })
-        .then(() => console.log('Na-share na!'))
-        .catch((err) => console.log('Canceled:', err));
+      if (navigator.geolocation) {
+        statusEl.innerText = "Kina-calculate ang Plus Code at GPS...";
+
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+
+            // Generate ng Plus Code ng Buyer
+            const plusCode = OpenLocationCode.encode(lat, lng);
+
+            // Direct link gamit ang permanenteng GPS Coordinates ng buyer
+            const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+
+            const shareText = `Plus Code: ${plusCode}\nIto po ang aking eksaktong lokasyon para sa delivery:`;
+
+            statusEl.innerText = "";
+
+            if (navigator.share) {
+              navigator.share({
+                title: 'Aking Lokasyon',
+                text: shareText,
+                url: mapsUrl
+              })
+              .then(() => console.log('Na-share na!'))
+              .catch((err) => console.log('Canceled:', err));
+            } else {
+              navigator.clipboard.writeText(`${shareText}\n${mapsUrl}`);
+              alert(`Na-copy na ang Plus Code (${plusCode})! Pwede mo na itong i-paste sa Messenger.`);
+            }
+          },
+          (error) => {
+            statusEl.innerText = "";
+            alert("Paki-allow ang Location access sa browser para ma-get ang inyong eksaktong Plus Code.");
+          },
+          { enableHighAccuracy: true, timeout: 10000 }
+        );
       } else {
-        navigator.clipboard.writeText(myLocationUrl);
-        alert("Na-copy na ang link! Pwede mo na itong i-paste sa Messenger.");
+        alert("Hindi suportado ng browser mo ang Geolocation.");
       }
     }
   </script>
