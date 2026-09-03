@@ -56,6 +56,31 @@
       margin-top: 15px;
       line-height: 1.4;
     }
+    /* Style para sa Messenger In-App Browser Notice */
+    .messenger-alert {
+      display: none;
+      background-color: #fff3cd;
+      border: 1px solid #ffeeba;
+      color: #856404;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      text-align: left;
+      font-size: 13px;
+    }
+    .open-chrome-btn {
+      display: inline-block;
+      background-color: #28a745;
+      color: white;
+      text-decoration: none;
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-weight: bold;
+      margin-top: 10px;
+      text-align: center;
+      width: 100%;
+      box-sizing: border-box;
+    }
     .copyright-footer {
       margin-top: 30px;
       font-size: 12px;
@@ -66,6 +91,14 @@
 <body>
 
   <div class="card">
+
+    <!-- Lalabas lang ito kapag na-detect na nasa Messenger Browser -->
+    <div id="messengerNotice" class="messenger-alert">
+      <strong>⚠️ Gamit mo ang Messenger Browser:</strong><br>
+      Para gumana nang tama ang GPS Location, i-open ang link na ito sa Chrome browser.<br>
+      <a id="chromeIntentBtn" href="#" class="open-chrome-btn">🌐 Buksan sa Chrome Browser</a>
+    </div>
+
     <h3>📍 Delivery Location Share</h3>
     <p>Pindutin ang button sa ibaba para ma-share agad ang inyong Digital Address (Plus Code) sa aming Messenger.</p>
 
@@ -75,15 +108,45 @@
     
     <p id="status" class="status-msg"></p>
 
-    <!-- Paalala sa user para sa Messenger Browser & GPS Permissions -->
     <div class="instruction-box">
       <strong>💡 Paalala:</strong> Siguraduhing <b>naka-ON ang GPS/Location</b> ng iyong phone at i-tap ang <b>"Allow"</b> kapag nag-prompt ang browser.<br><br>
-      <strong>📌 Pag nag-error sa Messenger:</strong> I-tap ang <b>3 tuldok (⋮)</b> sa itaas ng screen at piliin ang <b>"Open in Chrome / External Browser"</b>.
+      <strong>📌 Kung may error:</strong> I-tap ang <b>3 tuldok (⋮)</b> sa itaas ng screen at piliin ang <b>"Open in Chrome / External Browser"</b>.
     </div>
   </div>
 
   <script>
     const ALPHABET = "23456789CFGHJMPQRVWX";
+
+    // Auto Detect Messenger In-App Browser at I-force sa Chrome Intent
+    (function checkMessengerBrowser() {
+      const ua = navigator.userAgent || navigator.vendor || window.opera;
+      const isMessenger = (ua.indexOf("FBAN") > -1) || (ua.indexOf("FBAV") > -1) || (ua.indexOf("Messenger") > -1);
+
+      if (isMessenger) {
+        const currentUrl = window.location.href;
+        
+        // Android Chrome Intent URL
+        const cleanUrl = currentUrl.replace(/^https?:\/\//, '');
+        const chromeIntent = `intent://${cleanUrl}#Intent;scheme=https;package=com.android.chrome;end;`;
+
+        // Set the link for manual button
+        const chromeBtn = document.getElementById("chromeIntentBtn");
+        if (chromeBtn) {
+          chromeBtn.href = chromeIntent;
+        }
+
+        // Ipakita ang notice box
+        const noticeEl = document.getElementById("messengerNotice");
+        if (noticeEl) {
+          noticeEl.style.display = "block";
+        }
+
+        // Subukang i-trigger nang awtomatiko ang Chrome Intent
+        setTimeout(() => {
+          window.location.href = chromeIntent;
+        }, 300);
+      }
+    })();
 
     // Native Pure JS Plus Code Encoder
     function encodeStandardPlusCode(lat, lng) {
@@ -130,7 +193,6 @@
 
       statusEl.innerText = "Kinukuha ang lokasyon... Paki-allow ang prompt kapag lumabas.";
 
-      // Helper function kapag nakuha na ang latitude at longitude
       function handleSuccess(pos) {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
@@ -138,7 +200,6 @@
         const plusCode = encodeStandardPlusCode(lat, lng);
         const googleMapsUrl = `https://maps.google.com/?q=${lat},${lng}`;
 
-        // Malinis at maayos na format para sa Messenger
         const shareText = `📍 EKSAKTONG LOKASYON NG DELIVERY\n\n` +
                           `• Digital Address (Plus Code):\n${plusCode}\n\n` +
                           `• Direct Map Link:`;
@@ -166,31 +227,19 @@
         }
       }
 
-      // Step 1: Subukang kumuha gamit ang High Accuracy (GPS)
       navigator.geolocation.getCurrentPosition(
         handleSuccess,
         (err) => {
-          // Step 2: Kapag nag-fail o nag-timeout sa Messenger browser, mag-fallback sa Standard Accuracy (Network/Cell)
-          console.warn("High accuracy GPS failed. Switching to standard network mode...");
-          statusEl.innerText = "Inaayos ang lokasyon (Standard Mode)...";
-
-          navigator.geolocation.getCurrentPosition(
-            handleSuccess,
-            (fallbackErr) => {
-              statusEl.classList.add("error");
-              
-              if (fallbackErr.code === fallbackErr.PERMISSION_DENIED) {
-                statusEl.innerText = "⚠️ Na-block ang Location. Paki-ALLOW ang location permission sa browser/app settings.";
-              } else if (fallbackErr.code === fallbackErr.TIMEOUT) {
-                statusEl.innerText = "⚠️ Na-timeout ang pagkuha ng lokasyon. I-tap ang 3 tuldok (⋮) sa taas at i-open sa Chrome.";
-              } else {
-                statusEl.innerText = "⚠️ Siguraduhing NAKA-ON ang Location/GPS sa iyong phone at subukan ulit.";
-              }
-            },
-            { enableHighAccuracy: false, timeout: 10000, maximumAge: 30000 }
-          );
+          statusEl.classList.add("error");
+          if (err.code === err.PERMISSION_DENIED) {
+            statusEl.innerText = "⚠️ Na-block ang Location. Paki-ALLOW ang location permission sa browser settings.";
+          } else if (err.code === err.TIMEOUT) {
+            statusEl.innerText = "⚠️ Na-timeout ang Messenger browser. Paki-tap ang 'Buksan sa Chrome Browser' button sa itaas.";
+          } else {
+            statusEl.innerText = "⚠️ Siguraduhing NAKA-ON ang Location/GPS sa iyong phone at subukan ulit.";
+          }
         },
-        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
       );
     }
   </script>
