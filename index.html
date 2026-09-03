@@ -56,31 +56,6 @@
       margin-top: 15px;
       line-height: 1.4;
     }
-    /* Style para sa Messenger In-App Browser Notice */
-    .messenger-alert {
-      display: none;
-      background-color: #fff3cd;
-      border: 1px solid #ffeeba;
-      color: #856404;
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 15px;
-      text-align: left;
-      font-size: 13px;
-    }
-    .open-chrome-btn {
-      display: inline-block;
-      background-color: #28a745;
-      color: white;
-      text-decoration: none;
-      padding: 12px 16px;
-      border-radius: 6px;
-      font-weight: bold;
-      margin-top: 10px;
-      text-align: center;
-      width: 100%;
-      box-sizing: border-box;
-    }
     .copyright-footer {
       margin-top: 30px;
       font-size: 12px;
@@ -91,18 +66,11 @@
 <body>
 
   <div class="card">
-
-    <!-- Lalabas lang ito kapag na-detect na nasa Messenger Browser -->
-    <div id="messengerNotice" class="messenger-alert">
-      <strong>⚠️ Gamit mo ang Messenger Browser:</strong><br>
-      Para gumana nang tama ang GPS Location, i-open ang link na ito sa Chrome browser.<br>
-      <a id="chromeIntentBtn" href="#" class="open-chrome-btn">🌐 Buksan sa Chrome Browser</a>
-    </div>
-
     <h3>📍 Delivery Location Share</h3>
     <p>Pindutin ang button sa ibaba para ma-share agad ang inyong Digital Address (Plus Code) sa aming Messenger.</p>
 
-    <button class="share-btn" onclick="shareLocation()">
+    <!-- Isang Blue Button lang na smart! -->
+    <button id="mainShareBtn" class="share-btn" onclick="handleMainButtonClick()">
       📤 Pindutin para I-share sa Messenger
     </button>
     
@@ -110,43 +78,39 @@
 
     <div class="instruction-box">
       <strong>💡 Paalala:</strong> Siguraduhing <b>naka-ON ang GPS/Location</b> ng iyong phone at i-tap ang <b>"Allow"</b> kapag nag-prompt ang browser.<br><br>
-      <strong>📌 Kung may error:</strong> I-tap ang <b>3 tuldok (⋮)</b> sa itaas ng screen at piliin ang <b>"Open in Chrome / External Browser"</b>.
+      <strong>📌 Kung may error sa Messenger:</strong> I-tap ang <b>3 tuldok (⋮)</b> sa itaas ng screen at piliin ang <b>"Open in Chrome / External Browser"</b>.
     </div>
   </div>
 
   <script>
     const ALPHABET = "23456789CFGHJMPQRVWX";
 
-    // Auto Detect Messenger In-App Browser at I-force sa Chrome Intent
-    (function checkMessengerBrowser() {
+    // Function para ma-detect kung nasa Messenger In-App Browser
+    function isMessengerBrowser() {
       const ua = navigator.userAgent || navigator.vendor || window.opera;
-      const isMessenger = (ua.indexOf("FBAN") > -1) || (ua.indexOf("FBAV") > -1) || (ua.indexOf("Messenger") > -1);
+      return (ua.indexOf("FBAN") > -1) || (ua.indexOf("FBAV") > -1) || (ua.indexOf("Messenger") > -1);
+    }
 
-      if (isMessenger) {
+    // Main Button Click Controller
+    function handleMainButtonClick() {
+      // KAPAG NASA MESSENGER: I-redirect patungong Chrome sa pamamagitan ng Intent
+      if (isMessengerBrowser()) {
         const currentUrl = window.location.href;
-        
-        // Android Chrome Intent URL
         const cleanUrl = currentUrl.replace(/^https?:\/\//, '');
         const chromeIntent = `intent://${cleanUrl}#Intent;scheme=https;package=com.android.chrome;end;`;
 
-        // Set the link for manual button
-        const chromeBtn = document.getElementById("chromeIntentBtn");
-        if (chromeBtn) {
-          chromeBtn.href = chromeIntent;
-        }
+        const statusEl = document.getElementById("status");
+        statusEl.classList.remove("error");
+        statusEl.innerText = "Binubuksan sa Chrome Browser... Paki-tap ang 'CONTINUE' sa lumabas na prompt.";
 
-        // Ipakita ang notice box
-        const noticeEl = document.getElementById("messengerNotice");
-        if (noticeEl) {
-          noticeEl.style.display = "block";
-        }
-
-        // Subukang i-trigger nang awtomatiko ang Chrome Intent
-        setTimeout(() => {
-          window.location.href = chromeIntent;
-        }, 300);
+        // I-force open sa Chrome App
+        window.location.href = chromeIntent;
+        return;
       }
-    })();
+
+      // KAPAG NASA CHROME / EXTERNAL BROWSER NA: Kumuha na ng GPS Location!
+      executeLocationShare();
+    }
 
     // Native Pure JS Plus Code Encoder
     function encodeStandardPlusCode(lat, lng) {
@@ -181,7 +145,8 @@
       return code;
     }
 
-    function shareLocation() {
+    // GPS Geolocation Handler
+    function executeLocationShare() {
       const statusEl = document.getElementById("status");
       statusEl.classList.remove("error");
 
@@ -193,53 +158,51 @@
 
       statusEl.innerText = "Kinukuha ang lokasyon... Paki-allow ang prompt kapag lumabas.";
 
-      function handleSuccess(pos) {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-
-        const plusCode = encodeStandardPlusCode(lat, lng);
-        const googleMapsUrl = `https://maps.google.com/?q=${lat},${lng}`;
-
-        const shareText = `📍 EKSAKTONG LOKASYON NG DELIVERY\n\n` +
-                          `• Digital Address (Plus Code):\n${plusCode}\n\n` +
-                          `• Direct Map Link:`;
-
-        statusEl.innerText = "Nakuha na ang lokasyon!";
-
-        if (navigator.share) {
-          navigator.share({
-            title: 'Aking Lokasyon',
-            text: shareText,
-            url: googleMapsUrl
-          })
-          .then(() => {
-            statusEl.innerText = "";
-          })
-          .catch((err) => {
-            console.log('Canceled:', err);
-            statusEl.innerText = "Kanselado ang pag-share.";
-          });
-        } else {
-          const copyFull = `${shareText}\n${googleMapsUrl}`;
-          navigator.clipboard.writeText(copyFull);
-          alert(`Na-copy na ang Digital Address (${plusCode})! Pwede mo na itong i-paste sa Messenger.`);
-          statusEl.innerText = "";
-        }
-      }
-
       navigator.geolocation.getCurrentPosition(
-        handleSuccess,
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+
+          const plusCode = encodeStandardPlusCode(lat, lng);
+          const googleMapsUrl = `https://maps.google.com/?q=${lat},${lng}`;
+
+          const shareText = `📍 EKSAKTONG LOKASYON NG DELIVERY\n\n` +
+                            `• Digital Address (Plus Code):\n${plusCode}\n\n` +
+                            `• Direct Map Link:`;
+
+          statusEl.innerText = "Nakuha na ang lokasyon!";
+
+          if (navigator.share) {
+            navigator.share({
+              title: 'Aking Lokasyon',
+              text: shareText,
+              url: googleMapsUrl
+            })
+            .then(() => {
+              statusEl.innerText = "";
+            })
+            .catch((err) => {
+              console.log('Canceled:', err);
+              statusEl.innerText = "Kanselado ang pag-share.";
+            });
+          } else {
+            const copyFull = `${shareText}\n${googleMapsUrl}`;
+            navigator.clipboard.writeText(copyFull);
+            alert(`Na-copy na ang Digital Address (${plusCode})! Pwede mo na itong i-paste sa Messenger.`);
+            statusEl.innerText = "";
+          }
+        },
         (err) => {
           statusEl.classList.add("error");
           if (err.code === err.PERMISSION_DENIED) {
             statusEl.innerText = "⚠️ Na-block ang Location. Paki-ALLOW ang location permission sa browser settings.";
           } else if (err.code === err.TIMEOUT) {
-            statusEl.innerText = "⚠️ Na-timeout ang Messenger browser. Paki-tap ang 'Buksan sa Chrome Browser' button sa itaas.";
+            statusEl.innerText = "⚠️ Na-timeout ang pagkuha ng lokasyon. Pakisubukang pindutin ulit.";
           } else {
             statusEl.innerText = "⚠️ Siguraduhing NAKA-ON ang Location/GPS sa iyong phone at subukan ulit.";
           }
         },
-        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
     }
   </script>
