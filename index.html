@@ -54,6 +54,7 @@
       text-align: left;
       border-radius: 4px;
       margin-top: 15px;
+      line-height: 1.4;
     }
     .copyright-footer {
       margin-top: 30px;
@@ -74,9 +75,10 @@
     
     <p id="status" class="status-msg"></p>
 
-    <!-- Paalala sa user para maiwasan ang error -->
+    <!-- Paalala sa user para sa Messenger Browser & GPS Permissions -->
     <div class="instruction-box">
-      <strong>💡 Paalala:</strong> Siguraduhing <b>naka-ON ang GPS/Location</b> ng iyong phone at i-tap ang <b>"Allow"</b> kapag nag-prompt ang browser.
+      <strong>💡 Paalala:</strong> Siguraduhing <b>naka-ON ang GPS/Location</b> ng iyong phone at i-tap ang <b>"Allow"</b> kapag nag-prompt ang browser.<br><br>
+      <strong>📌 Pag nag-error sa Messenger:</strong> I-tap ang <b>3 tuldok (⋮)</b> sa itaas ng screen at piliin ang <b>"Open in Chrome / External Browser"</b>.
     </div>
   </div>
 
@@ -126,69 +128,69 @@
         return;
       }
 
-      statusEl.innerText = "Kinukuha ang lokasyon... Paki-allow ang location prompt kapag lumabas.";
+      statusEl.innerText = "Kinukuha ang lokasyon... Paki-allow ang prompt kapag lumabas.";
 
-      // Dinagdagan ng timeout sa 10 seconds para makahabol ang GPS chip
-      const geoOptions = {
-        enableHighAccuracy: true,
-        timeout: 10000, 
-        maximumAge: 0 
-      };
+      // Helper function kapag nakuha na ang latitude at longitude
+      function handleSuccess(pos) {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
 
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const lat = pos.coords.latitude;
-          const lng = pos.coords.longitude;
+        const plusCode = encodeStandardPlusCode(lat, lng);
+        const googleMapsUrl = `https://maps.google.com/?q=${lat},${lng}`;
 
-          const plusCode = encodeStandardPlusCode(lat, lng);
-          const googleMapsUrl = `https://maps.google.com/?q=${lat},${lng}`;
+        // Malinis at maayos na format para sa Messenger
+        const shareText = `📍 EKSAKTONG LOKASYON NG DELIVERY\n\n` +
+                          `• Digital Address (Plus Code):\n${plusCode}\n\n` +
+                          `• Direct Map Link:`;
 
-          // Malinis at maayos na format para sa Messenger
-          const shareText = `📍 EKSAKTONG LOKASYON NG DELIVERY\n\n` +
-                            `• Digital Address (Plus Code):\n${plusCode}\n\n` +
-                            `• Direct Map Link:`;
+        statusEl.innerText = "Nakuha na ang lokasyon!";
 
-          statusEl.innerText = "Nakuha na ang lokasyon!";
-
-          if (navigator.share) {
-            navigator.share({
-              title: 'Aking Lokasyon',
-              text: shareText,
-              url: googleMapsUrl
-            })
-            .then(() => {
-              statusEl.innerText = "";
-            })
-            .catch((err) => {
-              console.log('Canceled:', err);
-              statusEl.innerText = "Kanselado ang pag-share.";
-            });
-          } else {
-            const copyFull = `${shareText}\n${googleMapsUrl}`;
-            navigator.clipboard.writeText(copyFull);
-            alert(`Na-copy na ang Digital Address (${plusCode})! Pwede mo na itong i-paste sa Messenger.`);
+        if (navigator.share) {
+          navigator.share({
+            title: 'Aking Lokasyon',
+            text: shareText,
+            url: googleMapsUrl
+          })
+          .then(() => {
             statusEl.innerText = "";
-          }
-        },
+          })
+          .catch((err) => {
+            console.log('Canceled:', err);
+            statusEl.innerText = "Kanselado ang pag-share.";
+          });
+        } else {
+          const copyFull = `${shareText}\n${googleMapsUrl}`;
+          navigator.clipboard.writeText(copyFull);
+          alert(`Na-copy na ang Digital Address (${plusCode})! Pwede mo na itong i-paste sa Messenger.`);
+          statusEl.innerText = "";
+        }
+      }
+
+      // Step 1: Subukang kumuha gamit ang High Accuracy (GPS)
+      navigator.geolocation.getCurrentPosition(
+        handleSuccess,
         (err) => {
-          statusEl.classList.add("error");
-          
-          // Detalyadong mga babala sa UI sa halip na simpleng popup alert agad
-          switch(err.code) {
-            case err.PERMISSION_DENIED:
-              statusEl.innerText = "⚠️ Na-block ang Location. Paki-ALLOW ang location permission sa browser settings.";
-              break;
-            case err.POSITION_UNAVAILABLE:
-              statusEl.innerText = "⚠️ Hindi makuha ang GPS signal. Siguraduhing NAKA-ON ang Location sa iyong phone.";
-              break;
-            case err.TIMEOUT:
-              statusEl.innerText = "⚠️ Na-timeout ang pagkuha ng lokasyon. Pakisubukang pindutin ulit ang button.";
-              break;
-            default:
-              statusEl.innerText = "⚠️ Siguraduhing naka-ON ang GPS/Location sa iyong phone at subukan ulit.";
-          }
+          // Step 2: Kapag nag-fail o nag-timeout sa Messenger browser, mag-fallback sa Standard Accuracy (Network/Cell)
+          console.warn("High accuracy GPS failed. Switching to standard network mode...");
+          statusEl.innerText = "Inaayos ang lokasyon (Standard Mode)...";
+
+          navigator.geolocation.getCurrentPosition(
+            handleSuccess,
+            (fallbackErr) => {
+              statusEl.classList.add("error");
+              
+              if (fallbackErr.code === fallbackErr.PERMISSION_DENIED) {
+                statusEl.innerText = "⚠️ Na-block ang Location. Paki-ALLOW ang location permission sa browser/app settings.";
+              } else if (fallbackErr.code === fallbackErr.TIMEOUT) {
+                statusEl.innerText = "⚠️ Na-timeout ang pagkuha ng lokasyon. I-tap ang 3 tuldok (⋮) sa taas at i-open sa Chrome.";
+              } else {
+                statusEl.innerText = "⚠️ Siguraduhing NAKA-ON ang Location/GPS sa iyong phone at subukan ulit.";
+              }
+            },
+            { enableHighAccuracy: false, timeout: 10000, maximumAge: 30000 }
+          );
         },
-        geoOptions
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
       );
     }
   </script>
