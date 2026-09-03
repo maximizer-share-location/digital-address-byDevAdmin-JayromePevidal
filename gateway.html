@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ShareMap - Loading App</title>
+
+    <!-- MONETAG IN-PAGE PUSH AD SCRIPT -->
+    <script>(function(s){s.dataset.zone='11719353',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -69,10 +73,8 @@
         <h2>ShareMap Digital Address</h2>
         <p>Inihahanda ang iyong app, pakihintay...</p>
 
-        <!-- DITO ILALAGAY ANG AD SCRIPT MULA SA AD NETWORK -->
         <div class="ad-container" id="adBox">
-            <!-- Halimbawa: I-paste dito ang Monetag / AdSense Script Code -->
-            <p style="color: #cbd5e1; font-size: 0.85rem;">[ Sponsor Advertisement / Video Ad ]</p>
+            <p style="color: #cbd5e1; font-size: 0.85rem;">[ Sponsor Advertisement ]</p>
         </div>
 
         <div class="timer" id="countdown">5</div>
@@ -85,7 +87,6 @@
         const countdownEl = document.getElementById('countdown');
         const btn = document.getElementById('proceedBtn');
 
-        // PALITAN ITO NG MATCHING MAIN APP URL MO SA GITHUB PAGES
         const mainAppUrl = "https://maximizer-share-location.github.io/digital-address-byDevAdmin-JayromePevidal/app.html";
 
         const timer = setInterval(() => {
@@ -99,7 +100,6 @@
                 btn.removeAttribute("disabled");
                 btn.textContent = "Open ShareMap App";
 
-                // Auto redirect pagkatapos ng timer
                 btn.onclick = () => {
                     window.location.href = mainAppUrl;
                 };
