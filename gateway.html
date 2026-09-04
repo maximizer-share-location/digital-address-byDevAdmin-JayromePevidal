@@ -88,10 +88,13 @@
                 btn.textContent = "Open ShareMap App";
 
                 btn.onclick = () => {
-                    // Magbubukas ang High-paying Direct Link Ad sa bagong tab
+                    // 1. PINAPASOK ANG CLEARANCE TOKEN (Para hindi ire-redirect sa ShrinkEarn)
+                    sessionStorage.setItem('passedGateway', 'true');
+
+                    // 2. Magbubukas ang High-paying Direct Link Ad sa bagong tab
                     window.open(directLinkUrl, '_blank');
                     
-                    // Lilipat ang user sa mismong main app sa kasalukuyang tab
+                    // 3. Lilipat ang user sa mismong main app sa kasalukuyang tab
                     window.location.href = mainAppUrl;
                 };
             }
