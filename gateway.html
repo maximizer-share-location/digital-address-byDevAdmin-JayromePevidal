@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ShareMap - Loading App</title>
 
+    <!-- MONETAG IN-PAGE PUSH AD SCRIPT -->
     <script>(function(s){s.dataset.zone='11719353',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
 
     <style>
@@ -83,11 +84,9 @@
     </div>
 
     <script>
-        // Dito natin idinagdag ang ?pass=true na token sa URL
         const mainAppUrl = "./index.html?pass=true";
         const directLinkUrl = "https://omg10.com/4/11719626"; 
 
-        // Function para malaman kung nasa Messenger In-App Browser
         function isMessengerBrowser() {
             const ua = navigator.userAgent || navigator.vendor || window.opera;
             return (ua.indexOf("FBAN") > -1) || (ua.indexOf("FBAV") > -1) || (ua.indexOf("Messenger") > -1);
@@ -98,7 +97,6 @@
         const noticeEl = document.getElementById('messengerNotice');
         const subTextEl = document.getElementById('subText');
 
-        // SURIIN MUNA KUNG NASA MESSENGER BROWSER
         if (isMessengerBrowser()) {
             countdownEl.style.display = "none";
             noticeEl.style.display = "block";
@@ -109,13 +107,13 @@
             btn.textContent = "🌐 Lipat at Buksan sa Chrome";
 
             btn.onclick = () => {
+                // Set temporary access key bago lumipat ng browser intent
+                sessionStorage.setItem('access_granted', 'true');
                 const currentUrl = window.location.href;
                 const cleanUrl = currentUrl.replace(/^https?:\/\//, '');
-                // Ililipat sa Chrome habang nasa gateway.html pa rin
                 window.location.href = `intent://${cleanUrl}#Intent;scheme=https;package=com.android.chrome;end;`;
             };
         } else {
-            // KUNG TOTOONG CHROME / EXTERNAL BROWSER NA
             let timeLeft = 5;
 
             const timer = setInterval(() => {
@@ -130,10 +128,10 @@
                     btn.textContent = "Open ShareMap App";
 
                     btn.onclick = () => {
-                        // Open Monetag ad sa bagong tab
-                        window.open(directLinkUrl, '_blank');
+                        // Grant access key para sa index.html
+                        sessionStorage.setItem('access_granted', 'true');
                         
-                        // Pumunta sa main index.html na may ?pass=true
+                        window.open(directLinkUrl, '_blank');
                         window.location.href = mainAppUrl;
                     };
                 }
