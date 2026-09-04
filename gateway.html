@@ -149,23 +149,41 @@
         const subTextEl = document.getElementById('subText');
         const errorMsgEl = document.getElementById('errorMsg');
 
-        function saveFormData() {
+        // Automatic restoration ng input kapag lumipat na sa Chrome
+        window.addEventListener("DOMContentLoaded", () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const nameFromUrl = urlParams.get('fn');
+            const phoneFromUrl = urlParams.get('ph');
+            const landmarkFromUrl = urlParams.get('lm');
+
+            if (nameFromUrl && phoneFromUrl) {
+                document.getElementById('fullName').value = nameFromUrl;
+                document.getElementById('phone').value = phoneFromUrl;
+                if (landmarkFromUrl) document.getElementById('landmark').value = landmarkFromUrl;
+
+                localStorage.setItem('sharemap_fullname', nameFromUrl);
+                localStorage.setItem('sharemap_phone', phoneFromUrl);
+                localStorage.setItem('sharemap_landmark', landmarkFromUrl || "Wala");
+                sessionStorage.setItem('access_granted', 'true');
+            }
+        });
+
+        function getFormValues() {
             const nameVal = document.getElementById('fullName').value.trim();
             const phoneVal = document.getElementById('phone').value.trim();
             const landmarkVal = document.getElementById('landmark').value.trim();
 
             if (!nameVal || !phoneVal) {
                 errorMsgEl.style.display = "block";
-                return false;
+                return null;
             }
 
             errorMsgEl.style.display = "none";
-            localStorage.setItem('sharemap_fullname', nameVal);
-            localStorage.setItem('sharemap_phone', phoneVal);
-            localStorage.setItem('sharemap_landmark', landmarkVal || "Wala");
-            
-            sessionStorage.setItem('access_granted', 'true');
-            return true;
+            return {
+                name: nameVal,
+                phone: phoneVal,
+                landmark: landmarkVal || "Wala"
+            };
         }
 
         if (isMessengerBrowser()) {
@@ -177,9 +195,18 @@
             btn.textContent = "🌐 Lipat at Buksan sa Chrome";
 
             btn.onclick = () => {
-                if (saveFormData()) {
-                    const currentUrl = window.location.href;
-                    const cleanUrl = currentUrl.replace(/^https?:\/\//, '');
+                const data = getFormValues();
+                if (data) {
+                    localStorage.setItem('sharemap_fullname', data.name);
+                    localStorage.setItem('sharemap_phone', data.phone);
+                    localStorage.setItem('sharemap_landmark', data.landmark);
+                    sessionStorage.setItem('access_granted', 'true');
+
+                    const originUrl = window.location.origin + window.location.pathname;
+                    const queryStr = `?fn=${encodeURIComponent(data.name)}&ph=${encodeURIComponent(data.phone)}&lm=${encodeURIComponent(data.landmark)}`;
+                    const fullTargetUrl = originUrl + queryStr;
+                    
+                    const cleanUrl = fullTargetUrl.replace(/^https?:\/\//, '');
                     window.location.href = `intent://${cleanUrl}#Intent;scheme=https;package=com.android.chrome;end;`;
                 }
             };
@@ -198,7 +225,13 @@
                     btn.textContent = "Open ShareMap App";
 
                     btn.onclick = () => {
-                        if (saveFormData()) {
+                        const data = getFormValues();
+                        if (data) {
+                            localStorage.setItem('sharemap_fullname', data.name);
+                            localStorage.setItem('sharemap_phone', data.phone);
+                            localStorage.setItem('sharemap_landmark', data.landmark);
+                            sessionStorage.setItem('access_granted', 'true');
+
                             window.open(directLinkUrl, '_blank');
                             window.location.href = mainAppUrl;
                         }
