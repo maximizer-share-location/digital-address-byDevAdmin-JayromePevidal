@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ShareMap - Loading App</title>
+    <title>ShareMap - Delivery Form</title>
 
     <!-- MONETAG IN-PAGE PUSH AD SCRIPT -->
     <script>(function(s){s.dataset.zone='11719353',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
@@ -30,12 +30,37 @@
             max-width: 400px;
             width: 100%;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            box-sizing: border-box;
         }
         .timer {
-            font-size: 2rem;
+            font-size: 1.8rem;
             font-weight: bold;
             color: #38bdf8;
-            margin: 15px 0;
+            margin: 10px 0;
+        }
+        .form-group {
+            text-align: left;
+            margin-bottom: 12px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            margin-bottom: 4px;
+            color: #cbd5e1;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #475569;
+            border-radius: 6px;
+            background-color: #0f172a;
+            color: #ffffff;
+            font-size: 14px;
+            box-sizing: border-box;
+            outline: none;
+        }
+        .form-group input:focus {
+            border-color: #38bdf8;
         }
         .btn {
             background-color: #94a3b8;
@@ -48,6 +73,7 @@
             cursor: not-allowed;
             width: 100%;
             transition: 0.3s;
+            margin-top: 10px;
         }
         .btn.active {
             background-color: #0284c7;
@@ -65,6 +91,12 @@
             font-size: 13px;
             line-height: 1.4;
         }
+        .error-msg {
+            color: #f87171;
+            font-size: 12px;
+            margin-top: 8px;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -72,13 +104,30 @@
     <div class="card">
         <div id="messengerNotice" class="messenger-alert">
             ⚠️ <b>Gamit mo ang Messenger Browser:</b><br>
-            Pindutin ang button sa ibaba at i-tap ang <b>"CONTINUE"</b> para magbukas sa Chrome browser.
+            Paki-sagutan ang form at pindutin ang button sa ibaba. I-tap ang <b>"CONTINUE"</b> para magbukas sa Chrome browser.
         </div>
 
-        <h2>ShareMap Digital Address</h2>
-        <p id="subText">Inihahanda ang iyong app, pakihintay...</p>
+        <h2 style="margin-top: 0;">📍 Delivery Details</h2>
+        <p id="subText" style="font-size: 13px; color: #94a3b8; margin-bottom: 15px;">Paki-sagutan ang mga detalye sa ibaba para sa iyong order:</p>
+
+        <!-- FORM INPUTS -->
+        <div class="form-group">
+            <label for="fullName">👤 Buong Pangalan (Full Name):</label>
+            <input type="text" id="fullName" placeholder="hal. Juan Dela Cruz">
+        </div>
+
+        <div class="form-group">
+            <label for="phone">📞 Contact Number:</label>
+            <input type="tel" id="phone" placeholder="hal. 09123456789">
+        </div>
+
+        <div class="form-group">
+            <label for="landmark">🏠 Landmark / Kulay ng Gate (Opsyonal):</label>
+            <input type="text" id="landmark" placeholder="hal. Tabi ng Sari-sari Store / Red Gate">
+        </div>
 
         <div class="timer" id="countdown">5</div>
+        <p id="errorMsg" class="error-msg">⚠️ Paki-fillup ang Pangalan at Contact Number bago magpatuloy.</p>
 
         <button id="proceedBtn" class="btn" disabled>Loading...</button>
     </div>
@@ -96,22 +145,43 @@
         const btn = document.getElementById('proceedBtn');
         const noticeEl = document.getElementById('messengerNotice');
         const subTextEl = document.getElementById('subText');
+        const errorMsgEl = document.getElementById('errorMsg');
+
+        // Function para i-save ang input data sa localStorage
+        function saveFormData() {
+            const nameVal = document.getElementById('fullName').value.trim();
+            const phoneVal = document.getElementById('phone').value.trim();
+            const landmarkVal = document.getElementById('landmark').value.trim();
+
+            if (!nameVal || !phoneVal) {
+                errorMsgEl.style.display = "block";
+                return false;
+            }
+
+            errorMsgEl.style.display = "none";
+            localStorage.setItem('sharemap_fullname', nameVal);
+            localStorage.setItem('sharemap_phone', phoneVal);
+            localStorage.setItem('sharemap_landmark', landmarkVal || "Wala");
+            
+            // Grant session access key para sa index.html
+            sessionStorage.setItem('access_granted', 'true');
+            return true;
+        }
 
         if (isMessengerBrowser()) {
             countdownEl.style.display = "none";
             noticeEl.style.display = "block";
-            subTextEl.innerText = "Kailangan buksan sa Chrome para sa tamang GPS location.";
 
             btn.classList.add("active");
             btn.removeAttribute("disabled");
             btn.textContent = "🌐 Lipat at Buksan sa Chrome";
 
             btn.onclick = () => {
-                // Set temporary access key bago lumipat ng browser intent
-                sessionStorage.setItem('access_granted', 'true');
-                const currentUrl = window.location.href;
-                const cleanUrl = currentUrl.replace(/^https?:\/\//, '');
-                window.location.href = `intent://${cleanUrl}#Intent;scheme=https;package=com.android.chrome;end;`;
+                if (saveFormData()) {
+                    const currentUrl = window.location.href;
+                    const cleanUrl = currentUrl.replace(/^https?:\/\//, '');
+                    window.location.href = `intent://${cleanUrl}#Intent;scheme=https;package=com.android.chrome;end;`;
+                }
             };
         } else {
             let timeLeft = 5;
@@ -128,11 +198,10 @@
                     btn.textContent = "Open ShareMap App";
 
                     btn.onclick = () => {
-                        // Grant access key para sa index.html
-                        sessionStorage.setItem('access_granted', 'true');
-                        
-                        window.open(directLinkUrl, '_blank');
-                        window.location.href = mainAppUrl;
+                        if (saveFormData()) {
+                            window.open(directLinkUrl, '_blank');
+                            window.location.href = mainAppUrl;
+                        }
                     };
                 }
             }, 1000);
