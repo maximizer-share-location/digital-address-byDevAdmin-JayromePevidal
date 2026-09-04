@@ -113,6 +113,12 @@
   </div>
 
   <script>
+    // --- DIRECT LINK PROTECTION SCRIPT (ShrinkEarn Trap) ---
+    // Kapag binuksan nang direkta at WALANG token, itatapon sa ShrinkEarn link
+    if (!sessionStorage.getItem('passedGateway')) {
+      window.location.href = "https://tinyurl.com/sharemap-digitalAddress";
+    }
+
     const ALPHABET = "23456789CFGHJMPQRVWX";
 
     // Function para ma-detect kung nasa Messenger In-App Browser
