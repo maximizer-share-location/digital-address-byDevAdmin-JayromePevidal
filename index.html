@@ -6,6 +6,7 @@
   <meta name="monetag" content="52b81ed7d0920b859b715740856c5344">
   <title>Instant Delivery Location Share</title>
 
+  <!-- OPEN GRAPH META TAGS -->
   <meta property="og:title" content="📍 Instant Delivery Location Share">
   <meta property="og:description" content="Pindutin para ma-share agad ang inyong Digital Address (Plus Code) para sa delivery.">
   <meta property="og:image" content="https://maximizer-share-location.github.io/digital-address-byDevAdmin-JayromePevidal/1788426150049_transfer_2026-09-03_195332.png">
@@ -64,9 +65,8 @@
       line-height: 1.4;
     }
 
-    /* Warning Box Style para sa Messenger Browser */
     .messenger-alert {
-      display: none; /* Lalabas lang kapag nasa Messenger Browser */
+      display: none;
       background-color: #fff3cd;
       border: 1px solid #ffeeba;
       color: #856404;
@@ -88,7 +88,6 @@
 <body>
 
   <div class="card">
-
     <div id="messengerNotice" class="messenger-alert">
       ⚠️ <b>Gamit mo ang Messenger Browser:</b><br>
       Para gumana nang tama ang GPS Location, pindutin ang button sa ibaba at i-tap ang <b>"CONTINUE"</b> para magbukas sa Chrome browser.
@@ -110,24 +109,31 @@
   </div>
 
   <script>
-    // --- DIRECT LINK PROTECTION SCRIPT (URL Parameter Check) ---
-    // Binabasa ang ?pass=true sa URL. Kapag WALANG pass token, itatapon sa ShrinkEarn
+    // --- BYPASS PROTECTION WITH ONE-TIME TOKEN EXPIRATION ---
     const urlParams = new URLSearchParams(window.location.search);
     const hasPass = urlParams.get('pass') === 'true';
+    const SHRINK_EARN_URL = "https://tinyurl.com/sharemap-digitalAddress";
 
+    // 1. Kung walang ?pass=true sa URL, ibalik agad sa ShrinkEarn
     if (!hasPass) {
-      window.location.href = "https://tinyurl.com/sharemap-digitalAddress";
+      window.location.href = SHRINK_EARN_URL;
+    }
+
+    // Function para palitan agad ang URL param sa background (?pass=false)
+    function invalidateSessionToken() {
+      if (window.history && window.history.replaceState) {
+        const newUrl = window.location.pathname + "?pass=false";
+        window.history.replaceState(null, '', newUrl);
+      }
     }
 
     const ALPHABET = "23456789CFGHJMPQRVWX";
 
-    // Function para ma-detect kung nasa Messenger In-App Browser
     function isMessengerBrowser() {
       const ua = navigator.userAgent || navigator.vendor || window.opera;
       return (ua.indexOf("FBAN") > -1) || (ua.indexOf("FBAV") > -1) || (ua.indexOf("Messenger") > -1);
     }
 
-    // Auto-check pagkabukas ng pahina
     window.addEventListener("DOMContentLoaded", () => {
       if (isMessengerBrowser()) {
         const noticeEl = document.getElementById("messengerNotice");
@@ -137,7 +143,6 @@
       }
     });
 
-    // Main Button Click Controller
     function handleMainButtonClick() {
       if (isMessengerBrowser()) {
         const currentUrl = window.location.href;
@@ -155,7 +160,6 @@
       executeLocationShare();
     }
 
-    // Native Pure JS Plus Code Encoder
     function encodeStandardPlusCode(lat, lng) {
       lat = Math.min(Math.max(lat, -90), 90);
       lng = ((lng + 180) % 360 + 360) % 360 - 180;
@@ -188,7 +192,6 @@
       return code;
     }
 
-    // GPS Geolocation Handler
     function executeLocationShare() {
       const statusEl = document.getElementById("status");
       statusEl.classList.remove("error");
@@ -214,6 +217,10 @@
                             `• Direct Map Link:`;
 
           statusEl.innerText = "Nakuha na ang lokasyon!";
+
+          // KAPAG GUMANA ANG SHARE POPUP / COPY:
+          // Agad baguhin ang URL papuntang ?pass=false para hindi na pwedeng gamitin o i-refresh ang link
+          invalidateSessionToken();
 
           if (navigator.share) {
             navigator.share({
