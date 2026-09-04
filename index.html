@@ -22,11 +22,11 @@
     }
     .card {
       background: #ffffff;
-      padding: 30px 20px;
+      padding: 25px 20px;
       border-radius: 12px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
       max-width: 400px;
-      margin: 20px auto;
+      margin: 10px auto;
     }
     .share-btn { 
       background-color: #0084FF; 
@@ -53,6 +53,31 @@
     .status-msg.error {
       color: #d93025;
     }
+    
+    /* Box para sa nakuhang Buyer Info */
+    .buyer-info-box {
+      background-color: #f8f9fa;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px 15px;
+      text-align: left;
+      font-size: 13px;
+      color: #333;
+      margin-bottom: 15px;
+    }
+    .buyer-info-box h4 {
+      margin: 0 0 8px 0;
+      color: #0084FF;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .buyer-info-item {
+      margin-bottom: 4px;
+      word-break: break-word;
+    }
+
     .instruction-box {
       background-color: #eef6ff;
       border-left: 4px solid #0084FF;
@@ -77,7 +102,7 @@
       line-height: 1.4;
     }
     .copyright-footer {
-      margin-top: 30px;
+      margin-top: 25px;
       font-size: 12px;
       color: #777777;
     }
@@ -92,7 +117,16 @@
     </div>
 
     <h3>📍 Delivery Location Share</h3>
-    <p>Pindutin ang button sa ibaba para ma-share agad ang inyong Digital Address (Plus Code) sa aming Messenger.</p>
+
+    <!-- DITO IPAPAKITA ANG PINILAPAN NG BUYER -->
+    <div id="buyerDetailsDisplay" class="buyer-info-box">
+      <h4>📋 Impormasyon sa Delivery:</h4>
+      <div class="buyer-info-item">👤 <b>Pangalan:</b> <span id="dispName">-</span></div>
+      <div class="buyer-info-item">📞 <b>Contact:</b> <span id="dispPhone">-</span></div>
+      <div class="buyer-info-item">🏠 <b>Landmark:</b> <span id="dispLandmark">-</span></div>
+    </div>
+
+    <p style="font-size: 13px; color: #555;">Pindutin ang button sa ibaba para ma-share agad ang inyong Digital Address (Plus Code) kasama ang inyong details sa Seller.</p>
 
     <button id="mainShareBtn" class="share-btn" onclick="handleMainButtonClick()">
       📤 Pindutin para I-share sa Messenger
@@ -119,7 +153,6 @@
     }
 
     function invalidateSession() {
-      // Burahin ang session key para hindi na magamit muli sa refresh
       sessionStorage.removeItem('access_granted');
       if (window.history && window.history.replaceState) {
         window.history.replaceState(null, '', window.location.pathname + "?pass=false");
@@ -133,7 +166,17 @@
       return (ua.indexOf("FBAN") > -1) || (ua.indexOf("FBAV") > -1) || (ua.indexOf("Messenger") > -1);
     }
 
+    // Basahin ang data galing sa Gateway Form (localStorage)
+    const buyerName = localStorage.getItem('sharemap_fullname') || "Hindi naisulat";
+    const buyerPhone = localStorage.getItem('sharemap_phone') || "Hindi naisulat";
+    const buyerLandmark = localStorage.getItem('sharemap_landmark') || "Wala";
+
     window.addEventListener("DOMContentLoaded", () => {
+      // Ipakita sa screen ang detalye para sa buyer
+      document.getElementById("dispName").innerText = buyerName;
+      document.getElementById("dispPhone").innerText = buyerPhone;
+      document.getElementById("dispLandmark").innerText = buyerLandmark;
+
       if (isMessengerBrowser()) {
         const noticeEl = document.getElementById("messengerNotice");
         if (noticeEl) {
@@ -211,18 +254,21 @@
           const plusCode = encodeStandardPlusCode(lat, lng);
           const googleMapsUrl = `https://maps.google.com/?q=${lat},${lng}`;
 
-          const shareText = `📍 Pin Location\n\n` +
-                            `• Digital Address (Plus Code):\n${plusCode}\n\n` +
-                            `• Direct Map Link:`;
+          // MISMONG FORMAT NA IPAPADALA SA SELLER
+          const shareText = `📍 Pin Location\n` +
+                            `Digital address (plusCode): ${plusCode}\n\n` +
+                            `Name: ${buyerName}\n` +
+                            `Mobile number: ${buyerPhone}\n` +
+                            `Landmark: ${buyerLandmark}\n\n` +
+                            `Direct map link:`;
 
           statusEl.innerText = "Nakuha na ang lokasyon!";
 
-          // I-expire agad ang session bago pa man buksan ang share sheet
           invalidateSession();
 
           if (navigator.share) {
             navigator.share({
-              title: 'Aking Lokasyon',
+              title: 'Aking Delivery Location',
               text: shareText,
               url: googleMapsUrl
             })
@@ -234,9 +280,9 @@
               statusEl.innerText = "Kanselado ang pag-share.";
             });
           } else {
-            const copyFull = `${shareText}\n${googleMapsUrl}`;
+            const copyFull = `${shareText} ${googleMapsUrl}`;
             navigator.clipboard.writeText(copyFull);
-            alert(`Na-copy na ang Digital Address (${plusCode})! Pwede mo na itong i-paste sa Messenger.`);
+            alert(`Na-copy na ang iyong Delivery Address & Details! Pwede mo na itong i-paste sa Messenger.`);
             statusEl.innerText = "";
           }
         },
