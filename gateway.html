@@ -53,13 +53,31 @@
             background-color: #0284c7;
             cursor: pointer;
         }
+        .messenger-alert {
+            display: none;
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            color: #856404;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: left;
+            font-size: 13px;
+            line-height: 1.4;
+        }
     </style>
 </head>
 <body>
 
     <div class="card">
+        <!-- Messenger Warning Alert -->
+        <div id="messengerNotice" class="messenger-alert">
+            ⚠️ <b>Gamit mo ang Messenger Browser:</b><br>
+            Pindutin ang button sa ibaba at i-tap ang <b>"CONTINUE"</b> para magbukas sa Chrome browser.
+        </div>
+
         <h2>ShareMap Digital Address</h2>
-        <p>Inihahanda ang iyong app, pakihintay...</p>
+        <p id="subText">Inihahanda ang iyong app, pakihintay...</p>
 
         <div class="timer" id="countdown">5</div>
 
@@ -67,38 +85,65 @@
     </div>
 
     <script>
-        let timeLeft = 5;
-        const countdownEl = document.getElementById('countdown');
-        const btn = document.getElementById('proceedBtn');
-
         const mainAppUrl = "./index.html";
-        
-        // DIRECT LINK MULA SA MONETAG DASHBOARD MO
         const directLinkUrl = "https://omg10.com/4/11719626"; 
 
-        const timer = setInterval(() => {
-            timeLeft--;
-            countdownEl.textContent = timeLeft;
+        // 1. Function para malaman kung nasa loob ng Messenger In-App Browser
+        function isMessengerBrowser() {
+            const ua = navigator.userAgent || navigator.vendor || window.opera;
+            return (ua.indexOf("FBAN") > -1) || (ua.indexOf("FBAV") > -1) || (ua.indexOf("Messenger") > -1);
+        }
 
-            if (timeLeft <= 0) {
-                clearInterval(timer);
-                countdownEl.style.display = "none";
-                btn.classList.add("active");
-                btn.removeAttribute("disabled");
-                btn.textContent = "Open ShareMap App";
+        const countdownEl = document.getElementById('countdown');
+        const btn = document.getElementById('proceedBtn');
+        const noticeEl = document.getElementById('messengerNotice');
+        const subTextEl = document.getElementById('subText');
 
-                btn.onclick = () => {
-                    // 1. PINAPASOK ANG CLEARANCE TOKEN (Para hindi ire-redirect sa ShrinkEarn)
-                    sessionStorage.setItem('passedGateway', 'true');
+        // 2. SURIIN MUNA KUNG NASA MESSENGER
+        if (isMessengerBrowser()) {
+            // Kung nasa Messenger, ISARA MUNA ANG TIMER at hingin na lumipat sa Chrome
+            countdownEl.style.display = "none";
+            noticeEl.style.display = "block";
+            subTextEl.innerText = "Kailangan buksan sa Chrome para sa tamang GPS location.";
 
-                    // 2. Magbubukas ang High-paying Direct Link Ad sa bagong tab
-                    window.open(directLinkUrl, '_blank');
-                    
-                    // 3. Lilipat ang user sa mismong main app sa kasalukuyang tab
-                    window.location.href = mainAppUrl;
-                };
-            }
-        }, 1000);
+            btn.classList.add("active");
+            btn.removeAttribute("disabled");
+            btn.textContent = "🌐 Lipat at Buksan sa Chrome";
+
+            btn.onclick = () => {
+                const currentUrl = window.location.href;
+                const cleanUrl = currentUrl.replace(/^https?:\/\//, '');
+                // Lilipat sa Chrome Browser habang nananatili sa gateway.html
+                window.location.href = `intent://${cleanUrl}#Intent;scheme=https;package=com.android.chrome;end;`;
+            };
+        } else {
+            // 3. KUNG TOTOONG BROWSER NA (CHROME / SAFARI / ETC.), PATAKBUHIN ANG TIMER AT ADS
+            let timeLeft = 5;
+
+            const timer = setInterval(() => {
+                timeLeft--;
+                countdownEl.textContent = timeLeft;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    countdownEl.style.display = "none";
+                    btn.classList.add("active");
+                    btn.removeAttribute("disabled");
+                    btn.textContent = "Open ShareMap App";
+
+                    btn.onclick = () => {
+                        // Mag-iwan ng clearance token sa Chrome session
+                        sessionStorage.setItem('passedGateway', 'true');
+
+                        // Magbukas ng Monetag ad
+                        window.open(directLinkUrl, '_blank');
+                        
+                        // Pumunta sa main index.html
+                        window.location.href = mainAppUrl;
+                    };
+                }
+            }, 1000);
+        }
     </script>
 
 </body>
