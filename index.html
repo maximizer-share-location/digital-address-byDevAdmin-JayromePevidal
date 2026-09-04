@@ -6,7 +6,6 @@
   <meta name="monetag" content="52b81ed7d0920b859b715740856c5344">
   <title>Instant Delivery Location Share</title>
 
-  <!-- OPEN GRAPH META TAGS (Para sa Messenger Link Preview / Card Image) -->
   <meta property="og:title" content="📍 Instant Delivery Location Share">
   <meta property="og:description" content="Pindutin para ma-share agad ang inyong Digital Address (Plus Code) para sa delivery.">
   <meta property="og:image" content="https://maximizer-share-location.github.io/digital-address-byDevAdmin-JayromePevidal/1788426150049_transfer_2026-09-03_195332.png">
@@ -90,7 +89,6 @@
 
   <div class="card">
 
-    <!-- Warning box na nagpapaliwanag kung bakit magle-leave sa app -->
     <div id="messengerNotice" class="messenger-alert">
       ⚠️ <b>Gamit mo ang Messenger Browser:</b><br>
       Para gumana nang tama ang GPS Location, pindutin ang button sa ibaba at i-tap ang <b>"CONTINUE"</b> para magbukas sa Chrome browser.
@@ -99,7 +97,6 @@
     <h3>📍 Delivery Location Share</h3>
     <p>Pindutin ang button sa ibaba para ma-share agad ang inyong Digital Address (Plus Code) sa aming Messenger.</p>
 
-    <!-- Isang smart Blue Button -->
     <button id="mainShareBtn" class="share-btn" onclick="handleMainButtonClick()">
       📤 Pindutin para I-share sa Messenger
     </button>
@@ -113,9 +110,12 @@
   </div>
 
   <script>
-    // --- DIRECT LINK PROTECTION SCRIPT (ShrinkEarn Trap) ---
-    // Kapag binuksan nang direkta at WALANG token, itatapon sa ShrinkEarn link
-    if (!sessionStorage.getItem('passedGateway')) {
+    // --- DIRECT LINK PROTECTION SCRIPT (URL Parameter Check) ---
+    // Binabasa ang ?pass=true sa URL. Kapag WALANG pass token, itatapon sa ShrinkEarn
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasPass = urlParams.get('pass') === 'true';
+
+    if (!hasPass) {
       window.location.href = "https://tinyurl.com/sharemap-digitalAddress";
     }
 
@@ -250,7 +250,6 @@
     }
   </script>
 
-  <!-- Copyright Section -->
   <footer class="copyright-footer">
     <p>© 2026 Maximizer Admin - Developed by Jayrome Pevidal. All rights reserved.</p>
   </footer>
