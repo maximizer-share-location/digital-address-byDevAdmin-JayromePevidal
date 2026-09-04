@@ -16,7 +16,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-start; /* Inayos para hindi nakasiksik sa gitna kapag nag-keyboard */
+            justify-content: flex-start;
             min-height: 100vh;
             margin: 0;
             padding: 15px 12px 30px 12px;
@@ -24,7 +24,7 @@
         }
         .card {
             background: #1e293b;
-            padding: 18px 16px; /* Bawas padding para mas compact */
+            padding: 18px 16px;
             border-radius: 12px;
             text-align: center;
             max-width: 400px;
@@ -86,7 +86,7 @@
             color: #856404;
             padding: 10px 12px;
             border-radius: 8px;
-            margin-bottom: 12px;
+            margin-top: 15px;
             text-align: left;
             font-size: 12px;
             line-height: 1.3;
@@ -102,15 +102,10 @@
 <body>
 
     <div class="card">
-        <div id="messengerNotice" class="messenger-alert">
-            ⚠️ <b>Gamit mo ang Messenger Browser:</b><br>
-            Paki-sagutan ang form at pindutin ang button sa ibaba. I-tap ang <b>"CONTINUE"</b> para magbukas sa Chrome browser.
-        </div>
-
+        <!-- 1. PINAKATAAS: TITLE & FILL-UP FORM -->
         <h3 style="margin: 0 0 4px 0;">📍 Delivery Details</h3>
         <p id="subText" style="font-size: 12px; color: #94a3b8; margin: 0 0 12px 0;">Paki-sagutan ang mga detalye sa ibaba para sa iyong order:</p>
 
-        <!-- FORM INPUTS -->
         <div class="form-group">
             <label for="fullName">👤 Buong Pangalan (Full Name):</label>
             <input type="text" id="fullName" placeholder="hal. Juan Dela Cruz">
@@ -129,7 +124,14 @@
         <div class="timer" id="countdown">5</div>
         <p id="errorMsg" class="error-msg">⚠️ Paki-fillup ang Pangalan at Contact Number bago magpatuloy.</p>
 
+        <!-- 2. KASUNOD: ACTION BUTTON -->
         <button id="proceedBtn" class="btn" disabled>Loading...</button>
+
+        <!-- 3. PINAKA-IBABA: MESSENGER WARNING BOX -->
+        <div id="messengerNotice" class="messenger-alert">
+            ⚠️ <b>Gamit mo ang Messenger Browser:</b><br>
+            Paki-sagutan ang form at pindutin ang button sa itaas. I-tap ang <b>"CONTINUE"</b> para magbukas sa Chrome browser.
+        </div>
     </div>
 
     <script>
